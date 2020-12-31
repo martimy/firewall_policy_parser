@@ -22,4 +22,4 @@ python3 fg_policy_parser_lite.py Example.conf > out.csv
 
 Which produces a table like this:
 
-![Policies](images/picture1.png)
+![Policies](images/policies1.png)
