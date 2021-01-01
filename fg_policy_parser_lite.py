@@ -1,5 +1,5 @@
 """
-Copyright 2016-2020 Maen Artimy
+Copyright 2016-2021 Maen Artimy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,7 +37,12 @@ end
 """
 
 outfilename = "out.csv"
-FW_POLICY_SECTION = "config firewall policy\n"
+
+# Forigate Parsing Definitions
+POLICY_SECTION_START_MARKER = Keyword("config firewall policy").suppress()
+POLICY_SECTION_END_MARKER = Keyword("end").suppress()
+POLICY_START_MARKER = Keyword("edit").suppress()
+POLICY_END_MARKER = Keyword("next").suppress()
 
 # General Parsing Definitions
 SEPERATOR = Word("-_. ", max=1)
@@ -49,9 +54,8 @@ def policySectionParser(text):
     Returns the firewall policy section in the configuration. Thers is one section per VDOM.
     """
 
-    ENDMARK = Suppress("end\n")
-    sectionDef = Literal(FW_POLICY_SECTION) + \
-        SkipTo(ENDMARK).setResultsName("content")
+    sectionDef = POLICY_SECTION_START_MARKER + \
+        SkipTo(POLICY_SECTION_END_MARKER).setResultsName("content")
     return sectionDef.searchString(text)
 
 
@@ -66,9 +70,9 @@ def policyParser(text):
                       ZeroOrMore(SEPERATOR + Word(alphanums)))
     objList = OneOrMore(QUOTE + objName + QUOTE).setParseAction(';'.join)
 
-    policyNum = Literal("edit").suppress() + Word(nums).setResultsName("num")
+    policyNum = POLICY_START_MARKER + Word(nums).setResultsName("num")
     policyParam = objName | objList | quotedString | SkipTo("\n")
-    policyStatement = Literal("set").suppress() + \
+    policyStatement = Keyword("set").suppress() + \
         Group(fieldName + policyParam)
     policyDef = policyNum + Dict(OneOrMore(policyStatement)) + NEXTMARK
 
@@ -81,8 +85,8 @@ def policyFinder(text):
     It is used to verify the number of policies parsed correctly.
     """
 
-    policyNum = Literal("edit").suppress() + Word(nums)
-    policyDef = policyNum + SkipTo("next").suppress()
+    policyNum = POLICY_START_MARKER + Word(nums)
+    policyDef = policyNum + SkipTo(POLICY_END_MARKER)
 
     return policyDef.searchString(text)
 
@@ -115,7 +119,8 @@ def verifyParsing(policyNums, policies):
     #     st += ",".join([item[0] for item in policyNums[x]]) + "\n"
 
     for x in range(num):
-        notparsed = set([ item[0] for item in policyNums[x]]) - set([ item[0] for item in policies[x]])
+        notparsed = set([item[0] for item in policyNums[x]]) - \
+            set([item[0] for item in policies[x]])
         if notparsed:
             st += f"Policies not parsed in section { x }: "
             st += ",".join(list(notparsed)) + "\n"
@@ -165,6 +170,6 @@ if __name__ == "__main__":
     with open(outfilename, 'w') as outfile:
         for s in policyToCSV(columns, policies):
             outfile.write(s)
-        
+
     # Print report
     print(verifyParsing(policyNums, policies), file=sys.stderr)
