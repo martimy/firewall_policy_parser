@@ -5,15 +5,24 @@ Created on Sat Oct  2 11:55:33 2021
 """
 
 import csv
+import sys
 from policyanalyzer import Policy, PolicyAnalyzer, Packet
+
+# Read csv file conatining policies but remove header
+reader = []
+
+# Read command line arguments
+if len(sys.argv) > 2:
+    outfilename = sys.argv[2].split('.')[0] + ".csv"
+if len(sys.argv) > 1:
+    with open(sys.argv[1], 'r') as csvfile:
+        reader = list(csv.reader(csvfile))[1:]
+else:
+    print("Input file name is required!")
 
 # HEADER = "protocol,src,s_port,dest,d_port,action"
         
 
-# Read csv file conatining policies but remove header
-reader = []
-with open("policies1.csv", 'r') as csvfile:
-    reader = list(csv.reader(csvfile))[1:]
 
 print("=" * 50)
 print("Policies:")

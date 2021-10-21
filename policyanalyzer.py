@@ -58,7 +58,14 @@ class Protocol():
             raise ValueError("not a recognized protocol")
         return cls(protocol)
 
-
+class Address():
+        
+    @classmethod
+    def get_address(self, address):
+        if address == 'any':
+            address = '0.0.0.0/0'
+        return ipaddress.ip_interface(address).network
+    
 def compare_fields(a, b):
     """
     get relation between two policy fields
@@ -92,9 +99,9 @@ class Packet():
     def __init__(self, protocol, src, s_port, dst, d_port):
         self.fields = {
             'protocol': Protocol.get_protocol(protocol.strip()),
-            'src': ipaddress.ip_interface(src.strip()).network,
+            'src': Address.get_address(src.strip()),
             'sport': Port.get_port(s_port.strip()),
-            'dst': ipaddress.ip_interface(dst.strip()).network,
+            'dst': Address.get_address(dst.strip()),
             'dport': Port.get_port(d_port.strip()),
         }
 
@@ -151,6 +158,8 @@ class Policy(Packet):
         return all(f in [RField.SUPERSET, RField.EQUAL]
                    for f in self.compare_fields(packet))
 
+    def __repr__(self):
+        return ','.join(map(str, self.fields.values())) + ',' + self.action
 
 class PolicyAnalyzer():
     """
