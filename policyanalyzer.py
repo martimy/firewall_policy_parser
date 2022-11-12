@@ -2,13 +2,17 @@
 """
 Created on Sat Oct  2 23:27:20 2021
 
-@author: artimy
+@author: Maen Artimy
 """
 
 import ipaddress
 from definitions import RRule, RField, Anomaly
 
+
 class Port():
+    """
+    TCP/UDP Port
+    """
 
     def __init__(self, port):
         # Do not use this construtor directly, use get_port() instead
@@ -34,6 +38,10 @@ class Port():
 
 
 class Protocol():
+    """
+    Protcol
+    """
+
     _protocols = ["IP", "ICMP", "TCP", "UDP"]
 
     def __init__(self, protocol):
@@ -58,14 +66,19 @@ class Protocol():
             raise ValueError("not a recognized protocol")
         return cls(protocol)
 
+
 class Address():
-        
+    """
+    IPv4 Address
+    """
+
     @classmethod
-    def get_address(self, address):
+    def get_address(cls, address):
         if address == 'any':
             address = '0.0.0.0/0'
         return ipaddress.ip_interface(address).network
-    
+
+
 def compare_fields(a, b):
     """
     get relation between two policy fields
@@ -82,8 +95,9 @@ def compare_fields(a, b):
 
 def compare_addresses(a, b):
     """
-    get relation between two policy fields representing IP addresses
+    Get relation between two policy fields representing IP addresses
     """
+
     relation = RField.UNEQUAL
     if a == b:
         relation = RField.EQUAL
@@ -95,6 +109,9 @@ def compare_addresses(a, b):
 
 
 class Packet():
+    """
+    Packet header information
+    """
 
     def __init__(self, protocol, src, s_port, dst, d_port):
         self.fields = {
@@ -110,6 +127,9 @@ class Packet():
 
 
 class Policy(Packet):
+    """
+    Firewall Policy
+    """
 
     def __init__(self, protocol, src, s_port, dst, d_port, action):
         super().__init__(protocol, src, s_port, dst, d_port)
@@ -160,6 +180,7 @@ class Policy(Packet):
 
     def __repr__(self):
         return ','.join(map(str, self.fields.values())) + ',' + self.action
+
 
 class PolicyAnalyzer():
     """

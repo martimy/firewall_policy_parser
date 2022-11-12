@@ -1,15 +1,28 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Oct  2 11:55:33 2021
-
 """
 
 import csv
 import sys
+import os
 from policyanalyzer import Policy, PolicyAnalyzer, Packet
 
+    
+def policies_st(policies):    
+    print("=" * 50)
+    print("Policies:")
+    for n, p in enumerate(policies):
+        print(f"{n:3}: {p}")
+
+def anomalies_st(anomalies):
+    print("=" * 50)
+    print("Anomalies:")
+    for i in anomalies:
+        print(f"{i:3}: {anom[i]}")   
+        
 # Read csv file conatining policies but remove header
-reader = []
+# HEADER = "protocol,src,s_port,dest,d_port,action"
 
 # Read command line arguments
 if len(sys.argv) > 2:
@@ -18,26 +31,19 @@ if len(sys.argv) > 1:
     with open(sys.argv[1], 'r') as csvfile:
         reader = list(csv.reader(csvfile))[1:]
 else:
-    print("Input file name is required!")
-
-# HEADER = "protocol,src,s_port,dest,d_port,action"
-        
+    print(f"Usage: python3 {os.path.basename(__file__)} <file>")
+    sys.exit("Input file name is required!")
 
 
-print("=" * 50)
-print("Policies:")
 policies = [Policy(*r) for r in reader]
-for n, p in enumerate(policies):
-    print(f"{n:3}: {p}")
-
 analyzer = PolicyAnalyzer(policies)
 rule_relations = analyzer.get_relations()
-
-print("=" * 50)
-print("Anomalies:")
 anom = analyzer.get_anomalies()
-for i in anom:
-    print(f"{i:3}: {anom[i]}")    
+
+policies_st(policies)
+anomalies_st(anom)
+ 
+
 
 print("=" * 50)
 print("Matches:")
